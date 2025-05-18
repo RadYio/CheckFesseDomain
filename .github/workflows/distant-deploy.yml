@@ -66,49 +66,48 @@ jobs:
 
       # 🚀 4. Annonce sur discord
       - name: 📢 Discord finish deployment announcement
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        uses: Ilshidur/action-discord@master
-        args: >-
-          {
-            "embeds": [
-              {
-                "title": "Github",
-                "description": "✅ Déploiement **terminé**.\n\n",
-                "color": 3992355,
-                "author": {
-                  "name": "Nouveau COMMIT"
-                },
-                "url": "https://github.com/{{ EVENT_PAYLOAD.repository.full_name }}",
-                "footer": {
-                  "text": "Généré automatiquement via notre script de deploiement"
+        run: |
+          curl -X POST ${{ secrets.DISCORD_WEBHOOK }} \
+          -H "Content-Type: application/json" \
+          -d '{
+              "embeds": [
+                {
+                  "title": "Github",
+                  "description": "✅ Déploiement **terminé**.\n\n",
+                  "color": 3992355,
+                  "author": {
+                    "name": "Nouveau COMMIT"
+                  },
+                  "url": "https://github.com/{{ EVENT_PAYLOAD.repository.full_name }}",
+                  "footer": {
+                    "text": "Généré automatiquement via notre script de deploiement"
+                  }
                 }
-              }
-            ]
-          }
+              ]
+            }
 
   ping_discord:
-    runs-on: ubuntu-latest
-    steps:
-      - name: 📡 Discord pre notification
-        env:
+  runs-on: ubuntu-latest
+  steps:
+    - name: 📡 Discord pre notification with embed
+      env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        uses: Ilshidur/action-discord@master
-        with:
-        args: >-
-          {
-            "embeds": [
-              {
-                "title": "Github",
-                "description": "⏰ [{{EVENT_PAYLOAD.head_commit.timestamp}}] - Déploiement en cours.\n\n🔧 {{EVENT_PAYLOAD.head_commit.message}}",
-                "color": 15410096,
-                "author": {
-                  "name": "Nouveau COMMIT"
-                },
-                "url": "https://github.com/{{ EVENT_PAYLOAD.repository.full_name }}",
-                "footer": {
-                  "text": "Généré automatiquement via notre script de deploiement"
-                }
+      run: |
+        curl -X POST ${{ secrets.DISCORD_WEBHOOK }} \
+        -H "Content-Type: application/json" \
+        -d '{
+          "embeds": [
+            {
+              "title": "Github",
+              "description": "⏰ [${{ github.event.head_commit.timestamp }}] - Déploiement en cours.\n\n🔧 ${{ github.event.head_commit.message }}",
+              "color": 15410096,
+              "author": {
+                "name": "Nouveau COMMIT"
+              },
+              "url": "https://github.com/${{ github.repository }}",
+              "footer": {
+                "text": "Généré automatiquement via notre script de deploiement"
               }
-            ]
-          }
+            }
+          ]
+        }'
