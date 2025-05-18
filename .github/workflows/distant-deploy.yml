@@ -1,0 +1,82 @@
+name: 🚀 Auto Deploy & Smile
+
+on:
+  push:
+    branches: 
+    - "main"
+
+jobs:
+  distant_deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 🔐 1. Chargement de la clé SSH
+      - name: 🔐 Charger la clé SSH
+        uses: webfactory/ssh-agent@v0.9.1   # lance ssh-agent et ajoute la clé :contentReference[oaicite:1]{index=1}
+        with:
+          ssh-private-key: ${{ secrets.RPI_SSH_KEY }}
+
+      # 🧪 2. Mise à jour du git
+      - name: 🧪 Mise à jour du git (git pull)
+        env:
+          SSH_HOST: ${{ secrets.RPI_IP }}
+          SSH_USER: ${{ secrets.RPI_USER }}
+          SSH_PORT: ${{ secrets.RPI_SSH_PORT }}
+          DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          # 🔑 on ajoute l’hôte aux known_hosts via ssh-keyscan :contentReference[oaicite:2]{index=2}
+          PORT="${SSH_PORT:-22}"
+          ssh-keyscan -p "$PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
+
+          # 🤝 test de connexion
+          ssh -p "$PORT" "$SSH_USER@$SSH_HOST" << 'EOF'
+            cd /home/pi/CheckFesseDomain || exit 1        # 📂 se positionner
+            git pull origin main                          # 🔄 mise à jour du code
+          EOF
+
+      # 🚀 3. Déploiement Docker
+      - name: 🚀 Deploy & Docker Compose
+        env:
+          SSH_HOST: ${{ secrets.RPI_IP }}
+          SSH_USER: ${{ secrets.RPI_USER }}
+          SSH_PORT: ${{ secrets.RPI_SSH_PORT }}
+        run: |
+          PORT="${SSH_PORT:-22}"
+          ssh-keyscan -p "$PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
+
+          ssh -p "$PORT" "$SSH_USER@$SSH_HOST" << 'EOF'
+            cd /home/pi/CheckFesseDomain || exit 1           # 📂 se positionner
+            docker stop domain-watcher || true               # 🛑 arrêt des conteneurs
+            docker rm domain-watcher || true                 # 🛑 arrêt des conteneurs
+            docker rmi domain-watcher:latest || true         # 🛑 arrêt des conteneurs                    
+            docker build -t domain-watcher .                 # 🔧 rebuild & up
+            docker run -d \
+              --name domain-watcher \
+              --restart unless-stopped \
+              -e DOMAIN_NAME="${DOMAIN_NAME}" \
+              -e TELEGRAM_TOKEN="${TELEGRAM_TOKEN}" \
+              -e TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID}" \
+              domain-watcher
+          EOF
+
+      # 🚀 4. Annonce sur discord
+      - name: Discord finish deployment announcement
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: "{{ EVENT_PAYLOAD.repository.full_name }} est deployé."
+
+
+
+  ping_discord:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Discord pre notification
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master
+        with:
+          args: "({{EVENT_PAYLOAD.head_commit.timestamp}}) -- {{ EVENT_PAYLOAD.repository.full_name }} en train d'etre deployé.\n\nCommentaire: {{EVENT_PAYLOAD.head_commit.message}}"
