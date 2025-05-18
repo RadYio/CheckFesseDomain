@@ -69,8 +69,23 @@ jobs:
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
-        with:
-          args: "https://github.com/{{ EVENT_PAYLOAD.repository.full_name }} est deployé."
+        args: >-
+          {
+            "embeds": [
+              {
+                "title": "Github",
+                "description": "✅ Déploiement **terminé**.\n\n",
+                "color": 3992355,
+                "author": {
+                  "name": "Nouveau COMMIT"
+                },
+                "url": "https://github.com/{{ EVENT_PAYLOAD.repository.full_name }}",
+                "footer": {
+                  "text": "Généré automatiquement via notre script de deploiement"
+                }
+              }
+            ]
+          }
 
   ping_discord:
     runs-on: ubuntu-latest
@@ -80,4 +95,20 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         with:
-          args: "({{EVENT_PAYLOAD.head_commit.timestamp}}) -- https://github.com/{{ EVENT_PAYLOAD.repository.full_name }} en train d'être déployé.\n\nCommentaire: {{EVENT_PAYLOAD.head_commit.message}}"
+        args: >-
+          {
+            "embeds": [
+              {
+                "title": "Github",
+                "description": "⏰ [{{EVENT_PAYLOAD.head_commit.timestamp}}] - Déploiement en cours.\n\n🔧 {{EVENT_PAYLOAD.head_commit.message}}",
+                "color": 15410096,
+                "author": {
+                  "name": "Nouveau COMMIT"
+                },
+                "url": "https://github.com/{{ EVENT_PAYLOAD.repository.full_name }}",
+                "footer": {
+                  "text": "Généré automatiquement via notre script de deploiement"
+                }
+              }
+            ]
+          }
