@@ -3,7 +3,7 @@ import time
 import requests
 import os
 
-DOMAIN = os.environ.get("DOMAIN", "google.com")
+DOMAIN_NAME = os.environ.get("DOMAIN_NAME", "google.com")
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", print("Please set the TELEGRAM_TOKEN environment variable."))
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", print("Please set the TELEGRAM_CHAT_ID environment variable."))
 
@@ -20,12 +20,12 @@ def send_telegram(message):
 def check_domain():
     global last_expiry, last_status
     try:
-        w = whois.whois(DOMAIN)
+        w = whois.whois(DOMAIN_NAME)
         expiry = str(w.expiration_date)
         status = str(w.status)
 
         if last_expiry != expiry or last_status != status:
-            message = f"🔍 Changement détecté sur {DOMAIN} :\n"
+            message = f"🔍 Changement détecté sur {DOMAIN_NAME} :\n"
             if last_expiry != expiry:
                 message += f"⏰ Nouvelle expiration : {expiry}\n"
             if last_status != status:
@@ -35,7 +35,7 @@ def check_domain():
             last_expiry = expiry
             last_status = status
         else:
-            message = f"✅ Pas de changement sur {DOMAIN} :\nExpiration : {expiry}\nStatut : {status}"
+            message = f"✅ Pas de changement sur {DOMAIN_NAME} :\nExpiration : {expiry}\nStatut : {status}"
             print(message)
             send_telegram(message)
             
@@ -44,7 +44,7 @@ def check_domain():
         send_telegram(f"⚠️ Erreur lors de la vérification : {e}")
 
 if __name__ == "__main__":
-    print(f"🔍 Vérification de {DOMAIN} toutes les {CHECK_INTERVAL / 3600} heures...")
+    print(f"🔍 Vérification de {DOMAIN_NAME} toutes les {CHECK_INTERVAL / 3600} heures...")
     while True:
         check_domain()
         time.sleep(CHECK_INTERVAL)

@@ -70,21 +70,21 @@ jobs:
           curl -X POST ${{ secrets.DISCORD_WEBHOOK }} \
           -H "Content-Type: application/json" \
           -d '{
-              "embeds": [
-                {
-                  "title": "Github",
-                  "description": "✅ Déploiement **terminé**.\n\n",
-                  "color": 3992355,
-                  "author": {
-                    "name": "Nouveau COMMIT"
-                  },
-                  "url": "https://github.com/{{ EVENT_PAYLOAD.repository.full_name }}",
-                  "footer": {
-                    "text": "Généré automatiquement via notre script de deploiement"
-                  }
+            "embeds": [
+              {
+                "title": "Github",
+                "description": "✅ Déploiement **terminé**.\n\n",
+                "color": 3992355,
+                "author": {
+                  "name": "Nouveau COMMIT"
+                },
+                "url": "https://github.com/${{ github.repository }}",
+                "footer": {
+                  "text": "Généré automatiquement via notre script de deploiement"
                 }
-              ]
-            }
+              }
+            ]
+          }'
 
   ping_discord:
     runs-on: ubuntu-latest
