@@ -3,9 +3,9 @@ import time
 import requests
 import os
 
-DOMAIN = os.environ.get("DOMAIN", "")
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "")
-TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
+DOMAIN = os.environ.get("DOMAIN", "google.com")
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", print("Please set the TELEGRAM_TOKEN environment variable."))
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", print("Please set the TELEGRAM_CHAT_ID environment variable."))
 
 CHECK_INTERVAL = 86400  / 2 # 24h / 2 = 12h
 
